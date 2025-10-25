@@ -5,7 +5,6 @@ Fine-tuning multimodal LLMs to be world-class DJs 🎵
 ![](assets/images/dj-llm-small.png)
 
 
-
 ## Tasks
 
 - **Song Structure Analysis** — Identify sections like intro, verse, chorus, drop, and outro  
@@ -24,9 +23,9 @@ A novel annotated dataset of music licensed under Creative Commons is introduced
 
 ## LLMs
 
-The provided dataset can be used to fine-tune any multi-modal LLM suitable for audio understanding, capable of simultaneously processing text and audio inputs.
+The provided dataset can be used to fine-tune any multimodal LLM suitable for audio understanding, capable of simultaneously processing text and audio inputs.
 
-The project currently uses [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni).
+The project is currently based on [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni). Support for [more advanced](https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models) and [smaller multimodal models](https://github.com/stevelaskaridis/awesome-mobile-llm) is planned.
 
 ## Inference
 
