@@ -24,17 +24,17 @@ A novel annotated dataset of music licensed under Creative Commons is introduced
 
 ## LLMs
 
-You should be able to use the provided dataset to fine-tune any multi-modal LLM suitable for audio understanding, capable of simultaneously processing text and audio inputs.
+The provided dataset can be used to fine-tune any multi-modal LLM suitable for audio understanding, capable of simultaneously processing text and audio inputs.
 
 The project currently uses [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni).
 
 ## Inference
 
-You need to run the baseline or fine-tuned LLM via Gradio, which provides an API for evaluations and the demo app. This requires a GPU with a sufficiently large VRAM (e.g. Nvidia H100).
+The baseline or fine-tuned LLM should be run via Gradio, which provides an API for evaluations and the demo app. This requires a GPU with a sufficiently large VRAM (e.g. Nvidia H100).
 
-Qwen3-Omni has an [official HuggingFace space](https://huggingface.co/spaces/Qwen/Qwen3-Omni-Demo). As an example, the Gradio API address of this space is `https://qwen-qwen3-omni-demo.hf.space/`. However, you should run the model on your own machine if you have a suitable GPU or via a cloud GPU provider.
+Qwen3-Omni has an [official HuggingFace space](https://huggingface.co/spaces/Qwen/Qwen3-Omni-Demo). As an example, the Gradio API address of this space is `https://qwen-qwen3-omni-demo.hf.space/`. However, the model should be run on a local machine with a suitable GPU or via a cloud GPU provider.
 
-Once you have Gradio running, you can perform inference using the `inference/infer.py` script:
+Once Gradio is running, inference can be performed using the `inference/infer.py` script:
 
 ```
 uv run inference/infer.py \
