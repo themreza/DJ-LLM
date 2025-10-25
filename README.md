@@ -19,7 +19,7 @@ Fine-tuning multimodal LLMs to be world-class DJs 🎵
 
 ## Dataset
 
-A novel annotated dataset of music licensed under Creative Commons is introduced. The annotations are provided as metadata for each audio file, containing information such as song sections, BPM, key, chord progression, genre, mood, energy, cue points, instrumental and vocal sections, loopable regions, and beat drops.
+A novel annotated dataset of [music licensed under Creative Commons](https://ccmixter.org) is introduced. The annotations are provided as metadata for each audio file, containing information such as song sections, BPM, key, chord progression, genre, mood, energy, cue points, instrumental and vocal sections, loopable regions, and beat drops.
 
 ## LLMs
 
