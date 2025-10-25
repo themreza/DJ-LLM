@@ -1,0 +1,1 @@
+Identify sections of this track that would work well for looping during a DJ set. Provide timestamps in MM:SS format for the start and end of each suggested loop region, and explain what makes each section suitable for looping.

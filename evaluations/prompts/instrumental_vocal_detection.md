@@ -1,0 +1,1 @@
+Determine whether this track contains vocals or is purely instrumental. If vocals are present, describe their characteristics (e.g., lead vocals, background vocals, vocal chops, spoken word) and indicate the timestamps (in MM:SS format) when they appear.

@@ -1,0 +1,1 @@
+Analyze the structure of this track and identify all the main sections. For each section, provide the timestamp in MM:SS format and label (e.g., intro, verse, chorus, bridge, breakdown, drop, build-up, outro). Present your analysis in a clear, time-ordered format.
