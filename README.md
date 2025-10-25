@@ -45,7 +45,9 @@ uv run inference/infer.py \
 120
 ```
 
-## Evaluations
+## Fine-tuning
+
+## Evaluation
 
 ### Running
 
@@ -67,11 +69,25 @@ uv run inference/infer.py \
 
 ## Author
 
-A project by [Mohammad Tomaraei](https://www.linkedin.com/in/tomaraei/)
+A project by [Mohammad Tomaraei](https://www.linkedin.com/in/tomaraei/).
 
 ![](assets/images/mt.png)
+
+## Citation
+
+```bibtex
+@misc{tomaraei2025,
+      title = {DJ LLM: Fine-tuning multimodal LLMs to be world-class DJs},
+      author = {Mohammad Tomaraei},
+      year = {2025},
+      url = {https://github.com/themreza/DJ-LLM},
+}
+```
 
 ## Credits
 
 * [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni) is a large language model (LLM) developed by the Qwen team at Alibaba Cloud.
-
+* [ms-swift](https://github.com/modelscope/ms-swift) is a fine-tuning framework developed by the ModelScope community
+* [evalscope](https://github.com/modelscope/evalscope) is an LLM evaluation framework developed by the ModelScope community
+* The music files used in the dataset are licensed under Creative Commons (please see [dataset/ATTRIBUTION.csv](dataset/ATTRIBUTION.md) for a complete list of attributions)
+* The DJ LLM logo was generated with [Microsoft Copilot](https://copilot.microsoft.com/)

@@ -1,5 +1,5 @@
 """
-Inference script for Qwen3-Omni using Gradio Client.
+Inference script for Qwen3-Omni using via Gradio
 """
 
 import argparse
@@ -10,15 +10,13 @@ from gradio_client import Client, handle_file
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Infer Qwen3-Omni via the Gradio Client",
+        description="Infer Qwen3-Omni via Gradio",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-
-    # Required arguments
     parser.add_argument(
         "--client",
         required=True,
-        help="Client address (e.g., https://example.com/)"
+        help="Gradio client URL (e.g., https://example.com/)"
     )
     parser.add_argument(
         "--text",
@@ -30,8 +28,6 @@ def main():
         required=True,
         help="Path or URL to audio file"
     )
-
-    # Optional media inputs
     parser.add_argument(
         "--image",
         help="Path or URL to image file"
@@ -40,8 +36,6 @@ def main():
         "--video",
         help="Path or URL to video file"
     )
-
-    # Model parameters
     parser.add_argument(
         "--system-prompt",
         default="",
@@ -99,12 +93,10 @@ def main():
         sys.stderr = stderr_backup
         devnull.close()
 
-    # Prepare media inputs
     audio_input = handle_file(args.audio)
     image_input = handle_file(args.image) if args.image else None
     video_input = {"video": handle_file(args.video)} if args.video else None
 
-    # Make prediction
     result = client.predict(
         text=args.text,
         audio=audio_input,
@@ -120,9 +112,6 @@ def main():
         api_name="/chat_predict"
     )
 
-    # Extract the LLM's response from the result
-    # Result is a tuple: (updates..., messages_list)
-    # The last element is the conversation history with the assistant's response
     messages = result[-1]
     llm_response = next(
         (msg['content'] for msg in reversed(messages) if msg.get('role') == 'assistant'),
