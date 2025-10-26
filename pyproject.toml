@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "gradio-client>=1.13.3",
+    "mutagen>=1.47.0",
+    "pygame>=2.6.1",
+    "textual>=6.4.0",
 ]

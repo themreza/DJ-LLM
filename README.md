@@ -4,6 +4,7 @@ Fine-tuning multimodal LLMs to be world-class DJs 🎵
 
 ![](assets/images/dj-llm-small.png)
 
+🚧 **This is a work in progress! A release will be made once it's ready.**
 
 ## Tasks
 
@@ -20,6 +21,16 @@ Fine-tuning multimodal LLMs to be world-class DJs 🎵
 ## Dataset
 
 A novel annotated dataset of [music licensed under Creative Commons](https://ccmixter.org) is introduced. The annotations are provided as metadata for each audio file, containing information such as song sections, BPM, key, chord progression, genre, mood, energy, cue points, instrumental and vocal sections, loopable regions, and beat drops.
+
+### Preparation
+
+To facilitate the process of fetching, reviewing, and selecting music from ccMixter, two scripts have been created. 
+
+`uv run dataset/fetch_ccmixter.py` uses [ccMixter's API](https://ccmixter.org/query-api) to fetch the list of all uploads with a CC BY license, saving the data as JSONL to `dataset/ccmixter_data.jsonl`. This script must be run first.
+
+`uv run dataset/select_ccmixter.py` provides a [Terminal User Interface (TUI)](https://github.com/Textualize/textual) to navigate, view, listen to, and select uploads to be included in the dataset. The selected upload IDs are saved one per line to `dataset/selected_uploads.txt`.
+
+![](assets/images/ccmixter-browser.png)
 
 ## LLMs
 
