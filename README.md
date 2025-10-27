@@ -101,4 +101,4 @@ A project by [Mohammad Tomaraei](https://www.linkedin.com/in/tomaraei/).
 * [ms-swift](https://github.com/modelscope/ms-swift) is a fine-tuning framework developed by the ModelScope community
 * [evalscope](https://github.com/modelscope/evalscope) is an LLM evaluation framework developed by the ModelScope community
 * The music files used in the dataset are licensed under Creative Commons (please see [dataset/ATTRIBUTION.csv](dataset/ATTRIBUTION.md) for a complete list of attributions)
-* The DJ LLM logo was generated with [Microsoft Copilot](https://copilot.microsoft.com/)
+* The DJ LLM logo was generated with [Microsoft Copilot](https://copilot.microsoft.com/) and animated with [OpenAI's Sora 2 Pro](https://platform.openai.com/docs/models/sora-2-pro)
