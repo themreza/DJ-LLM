@@ -24,13 +24,15 @@ A novel annotated dataset of [music licensed under Creative Commons](https://ccm
 
 ### Preparation
 
-To facilitate the process of fetching, reviewing, and selecting music from ccMixter, two scripts have been created. 
+To facilitate the process of fetching, reviewing, and selecting music from ccMixter, the following scripts have been created (they need to be run in this order):
 
-`uv run dataset/fetch_ccmixter.py` uses [ccMixter's API](https://ccmixter.org/query-api) to fetch the list of all uploads with a CC BY license, saving the data as JSONL to `dataset/ccmixter_data.jsonl`. This script must be run first.
+1. `uv run dataset/fetch_ccmixter.py` uses [ccMixter's API](https://ccmixter.org/query-api) to fetch the list of all uploads with a CC BY license, saving the data as JSONL to `dataset/ccmixter_data.jsonl`. This script must be run first.
 
-`uv run dataset/select_ccmixter.py` provides a [Terminal User Interface (TUI)](https://github.com/Textualize/textual) to navigate, view, listen to, and select uploads to be included in the dataset. The selected upload IDs are saved one per line to `dataset/selected_uploads.txt`.
+2. `uv run dataset/select_ccmixter.py` provides a [Terminal User Interface (TUI)](https://github.com/Textualize/textual) to navigate, view, listen to, and select uploads to be included in the dataset. The selected upload IDs are saved one per line to `dataset/selected_uploads.txt`.
 
 ![](assets/images/ccmixter-browser.png)
+
+3. `uv run dataset/download_ccmixter.py` downloads the selected uploads, saving them to `dataset/music/<upload_id>_<file_index>.mp3`. It currently only downloads the first file of the upload, if it's in MP3 format.
 
 ## LLMs
 

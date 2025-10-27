@@ -212,3 +212,4 @@ __marimo__/
 # Only the final dataset files are published, not the source and intermediate data
 dataset/ccmixter_data.jsonl
 dataset/selected_uploads.txt
+dataset/music
