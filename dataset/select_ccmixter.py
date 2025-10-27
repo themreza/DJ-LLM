@@ -10,7 +10,8 @@ import os
 from pathlib import Path
 import ssl
 import time
-from typing import Set
+import threading
+from typing import Set, Optional
 import urllib.request
 import urllib.error
 import tempfile
@@ -39,18 +40,21 @@ class MusicPlayer:
         self.temp_dir = tempfile.mkdtemp()
         self.duration = 0.0
         self.start_time = 0.0
+        self.download_thread: Optional[threading.Thread] = None
+        self.cancel_download = False
+        self.download_progress = 0
+        self.is_downloading = False
         if AUDIO_AVAILABLE:
             pygame.mixer.init()
 
-    def play(self, url: str):
-        if not AUDIO_AVAILABLE:
-            return (False, "pygame not available")
+    def cancel_current_download(self):
+        if self.is_downloading:
+            self.cancel_download = True
+
+    def _download_and_play(self, url: str, callback):
+        local_path = os.path.join(self.temp_dir, "current.mp3")
 
         try:
-            self.stop()
-
-            local_path = os.path.join(self.temp_dir, "current.mp3")
-
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
@@ -60,11 +64,53 @@ class MusicPlayer:
             req.add_header('User-Agent', 'DJ-LLM')
 
             with urllib.request.urlopen(req, context=ssl_context) as response:
+                total_size = int(response.headers.get('Content-Length', 0))
+                downloaded = 0
+                chunk_size = 8192
+
                 with open(local_path, 'wb') as out_file:
-                    out_file.write(response.read())
+                    while True:
+                        if self.cancel_download:
+                            self.is_downloading = False
+                            self.download_progress = 0
+                            try:
+                                if os.path.exists(local_path):
+                                    os.remove(local_path)
+                            except:
+                                pass
+                            callback(False, "Download cancelled", 0)
+                            return
+
+                        chunk = response.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        out_file.write(chunk)
+                        downloaded += len(chunk)
+
+                        if total_size > 0:
+                            self.download_progress = int((downloaded / total_size) * 100)
+                        else:
+                            self.download_progress = 0
+
+                        callback(None, "Downloading", self.download_progress)
+
+            if self.cancel_download:
+                self.is_downloading = False
+                self.download_progress = 0
+                try:
+                    if os.path.exists(local_path):
+                        os.remove(local_path)
+                except:
+                    pass
+                callback(False, "Download cancelled", 0)
+                return
 
             if not os.path.exists(local_path) or os.path.getsize(local_path) == 0:
-                return (False, "Download failed or empty file")
+                self.is_downloading = False
+                self.download_progress = 0
+                callback(False, "Download failed or empty file", 0)
+                return
 
             try:
                 audio = MP3(local_path)
@@ -77,15 +123,53 @@ class MusicPlayer:
             self.playing = True
             self.current_file = local_path
             self.start_time = time.time()
-            return (True, "Playing")
+            self.is_downloading = False
+            self.download_progress = 0
+            callback(True, "Playing", 0)
+
         except urllib.error.URLError as e:
-            return (False, f"Network error: {e.reason}")
+            self.is_downloading = False
+            self.download_progress = 0
+            try:
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+            except:
+                pass
+            callback(False, f"Network error: {e.reason}", 0)
         except Exception as e:
-            return (False, f"Error: {str(e)}")
+            self.is_downloading = False
+            self.download_progress = 0
+            try:
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+            except:
+                pass
+            callback(False, f"Error: {str(e)}", 0)
+
+    def play(self, url: str, callback):
+        if not AUDIO_AVAILABLE:
+            callback(False, "pygame not available", 0)
+            return
+
+        self.cancel_current_download()
+        self.stop()
+
+        self.cancel_download = False
+        self.is_downloading = True
+        self.download_progress = 0
+
+        self.download_thread = threading.Thread(
+            target=self._download_and_play,
+            args=(url, callback),
+            daemon=True
+        )
+        self.download_thread.start()
 
     def stop(self):
         if not AUDIO_AVAILABLE:
             return
+
+        self.cancel_current_download()
 
         if self.playing:
             pygame.mixer.music.stop()
@@ -166,32 +250,48 @@ class MetadataPanel(Static):
             self.update("Select an upload to view metadata")
 
     def render_metadata(self, data, selected_file_index=0) -> str:
+        def safe_escape(text):
+            return str(text).replace('[', '\\[').replace(']', '\\]')
+
         extra = data.get("upload_extra", {})
         files = data.get("files", [])
 
+        mp3_files = [f for f in files if f.get('file_name', '').lower().endswith('.mp3')]
+
         files_list = ""
-        for i, f in enumerate(files):
+        for i, f in enumerate(mp3_files):
             marker = "▶" if i == selected_file_index else " "
-            file_size = f.get('file_filesize', '')
-            file_name = f.get('file_name', 'Unknown')
-            files_list += f"{marker} [{i}] {file_name} {file_size}\n"
+            file_size = safe_escape(f.get('file_filesize', ''))
+            file_name = safe_escape(f.get('file_name', 'Unknown'))
+            files_list += f"{marker} ({i}) {file_name} {file_size}\n"
 
-        content = f"""[bold cyan]{data['upload_name']}[/bold cyan]
+        upload_name = safe_escape(data.get('upload_name', 'N/A'))
+        user_real_name = safe_escape(data.get('user_real_name', 'N/A'))
+        upload_date = safe_escape(data.get('upload_date_format', 'N/A'))
+        license_name = safe_escape(data.get('license_name', 'N/A'))
+        usertags = safe_escape(extra.get('usertags', 'N/A'))
+        bpm = safe_escape(extra.get('bpm', 'N/A'))
+        description = safe_escape(data.get('upload_description_plain', 'N/A'))[:300]
+        page_url = safe_escape(data.get('file_page_url', 'N/A'))
+        upload_id = safe_escape(data.get('upload_id', 'N/A'))
+        upload_num_scores = safe_escape(data.get('upload_num_scores', 0))
 
-[yellow]Artist:[/yellow] {data.get('user_real_name', 'N/A')}
-[yellow]Upload ID:[/yellow] {data['upload_id']}
-[yellow]Date:[/yellow] {data.get('upload_date_format', 'N/A')}
-[yellow]License:[/yellow] {data.get('license_name', 'N/A')}
-[yellow]Tags:[/yellow] {extra.get('usertags', 'N/A')}
-[yellow]BPM:[/yellow] {extra.get('bpm', 'N/A')}
-[yellow]Scores:[/yellow] {data.get('upload_num_scores', 0)}
+        content = f"""[bold cyan]{upload_name}[/bold cyan]
+
+[yellow]Artist:[/yellow] {user_real_name}
+[yellow]Upload ID:[/yellow] {upload_id}
+[yellow]Date:[/yellow] {upload_date}
+[yellow]License:[/yellow] {license_name}
+[yellow]Tags:[/yellow] {usertags}
+[yellow]BPM:[/yellow] {bpm}
+[yellow]Scores:[/yellow] {upload_num_scores}
 
 [yellow]Versions:[/yellow]
 {files_list}
 [yellow]Description:[/yellow]
-{data.get('upload_description_plain', 'N/A')[:300]}
+{description}
 
-[yellow]Page:[/yellow] {data.get('file_page_url', 'N/A')}
+[yellow]Page:[/yellow] {page_url}
 """
         return content
 
@@ -282,7 +382,7 @@ class CCMixterBrowser(App):
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),
-        Binding("space", "toggle_select", "Select/Unselect"),
+        Binding("s", "toggle_select", "Select/Unselect"),
         Binding("p", "play_music", "Play/Stop"),
         Binding("shift+up", "prev_file", "Shift+↑ Version", show=True),
         Binding("shift+down", "next_file", "Shift+↓ Version", show=True),
@@ -298,6 +398,7 @@ class CCMixterBrowser(App):
         self.current_upload = None
         self.current_upload_id = None
         self.current_track_name = ""
+        self.play_mode = False
         self.data_file = Path("dataset/ccmixter_data.jsonl")
         self.selection_file = Path("dataset/selected_uploads.txt")
 
@@ -327,6 +428,7 @@ class CCMixterBrowser(App):
         self.load_selections()
         self.setup_table()
         self.populate_table()
+        self.navigate_to_last_selected()
         self.set_interval(0.5, self.update_progress)
 
     def load_data(self):
@@ -340,7 +442,7 @@ class CCMixterBrowser(App):
 
     def save_selections(self):
         with open(self.selection_file, 'w') as f:
-            for upload_id in sorted(self.selected_ids):
+            for upload_id in sorted(self.selected_ids, reverse=True):
                 f.write(f"{upload_id}\n")
 
     def setup_table(self):
@@ -379,11 +481,31 @@ class CCMixterBrowser(App):
                 key=str(upload_id)
             )
 
+    def navigate_to_last_selected(self):
+        if not self.selection_file.exists():
+            return
+
+        try:
+            with open(self.selection_file, 'r') as f:
+                lines = [line.strip() for line in f if line.strip()]
+                if not lines:
+                    return
+
+                last_id = int(lines[-1])
+
+                table = self.query_one("#uploads_table", DataTable)
+                table.move_cursor(row=table.get_row_index(str(last_id)))
+        except Exception:
+            pass
+
     def on_data_table_row_highlighted(self, event):
         upload_id = int(event.row_key.value)
 
         if upload_id == self.current_upload_id:
             return
+
+        if self.player.is_downloading:
+            self.player.cancel_current_download()
 
         self.current_upload_id = upload_id
         self.current_upload = next((u for u in self.uploads if u["upload_id"] == upload_id), None)
@@ -393,7 +515,7 @@ class CCMixterBrowser(App):
             metadata_panel.upload_data = self.current_upload
             metadata_panel.selected_file_index = 0
 
-            if self.player.is_playing():
+            if self.play_mode:
                 self.play_current_file()
 
     def action_toggle_select(self):
@@ -430,45 +552,54 @@ class CCMixterBrowser(App):
         except Exception:
             pass
 
+    def _play_callback(self, success, message, progress):
+        if success is None:
+            status_panel = self.query_one("#status_panel", StatusPanel)
+            status_panel.status_text = f"Downloading: {self.current_track_name}"
+            status_panel.progress_text = f"[{progress}%]"
+        elif success:
+            self.update_status(f"Playing: {self.current_track_name}")
+        else:
+            self.update_status(f"Failed: {message}")
+            self.current_track_name = ""
+
     def play_current_file(self):
         if not self.current_upload:
             self.update_status("No upload selected")
             return
 
         files = self.current_upload.get("files", [])
-        if not files:
-            self.update_status("No files available")
+        mp3_files = [f for f in files if f.get('file_name', '').lower().endswith('.mp3')]
+
+        if not mp3_files:
+            self.update_status("No MP3 files available")
             return
 
         metadata_panel = self.query_one("#metadata_panel", MetadataPanel)
         file_index = metadata_panel.selected_file_index
 
-        if file_index >= len(files):
+        if file_index >= len(mp3_files):
             file_index = 0
 
-        mp3_file = files[file_index]
+        mp3_file = mp3_files[file_index]
         url = mp3_file.get("download_url")
 
         if url:
             self.current_track_name = mp3_file['file_name']
-            self.update_status(f"Loading: {self.current_track_name}")
-            success, message = self.player.play(url)
-            if success:
-                self.update_status(f"Playing: {self.current_track_name}")
-            else:
-                self.update_status(f"Failed: {message}")
-                self.current_track_name = ""
+            self.update_status(f"Starting download: {self.current_track_name}")
+            self.player.play(url, self._play_callback)
         else:
             self.update_status("No download URL available")
 
     def action_play_music(self):
-        if self.player.is_playing():
+        if self.play_mode:
+            self.play_mode = False
             self.action_stop_music()
             self.update_play_button()
-            return
-
-        self.play_current_file()
-        self.update_play_button()
+        else:
+            self.play_mode = True
+            self.play_current_file()
+            self.update_play_button()
 
     def action_stop_music(self):
         self.player.stop()
@@ -480,22 +611,32 @@ class CCMixterBrowser(App):
             return
 
         files = self.current_upload.get("files", [])
-        if not files:
+        mp3_files = [f for f in files if f.get('file_name', '').lower().endswith('.mp3')]
+
+        if not mp3_files:
             return
 
         metadata_panel = self.query_one("#metadata_panel", MetadataPanel)
-        metadata_panel.selected_file_index = (metadata_panel.selected_file_index + 1) % len(files)
+        metadata_panel.selected_file_index = (metadata_panel.selected_file_index + 1) % len(mp3_files)
+
+        if self.play_mode:
+            self.play_current_file()
 
     def action_prev_file(self):
         if not self.current_upload:
             return
 
         files = self.current_upload.get("files", [])
-        if not files:
+        mp3_files = [f for f in files if f.get('file_name', '').lower().endswith('.mp3')]
+
+        if not mp3_files:
             return
 
         metadata_panel = self.query_one("#metadata_panel", MetadataPanel)
-        metadata_panel.selected_file_index = (metadata_panel.selected_file_index - 1) % len(files)
+        metadata_panel.selected_file_index = (metadata_panel.selected_file_index - 1) % len(mp3_files)
+
+        if self.play_mode:
+            self.play_current_file()
 
     def action_seek_forward(self):
         if self.player.is_playing():
@@ -518,7 +659,7 @@ class CCMixterBrowser(App):
 
     def update_play_button(self) -> None:
         button = self.query_one("#btn_play_stop", Button)
-        if self.player.is_playing():
+        if self.play_mode:
             button.label = "Play Mode: On"
             button.variant = "success"
         else:

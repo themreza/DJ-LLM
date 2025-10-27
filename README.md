@@ -2,7 +2,7 @@
 
 Fine-tuning multimodal LLMs to be world-class DJs 🎵
 
-![](assets/images/dj-llm-small.png)
+![](assets/images/dj-llm.gif)
 
 🚧 **This is a work in progress! A release will be made once it's ready.**
 
@@ -97,7 +97,7 @@ A project by [Mohammad Tomaraei](https://www.linkedin.com/in/tomaraei/).
 
 ## Credits
 
-* [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni) is a large language model (LLM) developed by the Qwen team at Alibaba Cloud.
+* [Qwen3-Omni](https://github.com/QwenLM/Qwen3-Omni) is a large language model (LLM) developed by the Qwen team at Alibaba Cloud
 * [ms-swift](https://github.com/modelscope/ms-swift) is a fine-tuning framework developed by the ModelScope community
 * [evalscope](https://github.com/modelscope/evalscope) is an LLM evaluation framework developed by the ModelScope community
 * The music files used in the dataset are licensed under Creative Commons (please see [dataset/ATTRIBUTION.csv](dataset/ATTRIBUTION.md) for a complete list of attributions)
