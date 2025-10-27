@@ -32,7 +32,7 @@ To facilitate the process of fetching, reviewing, and selecting music from ccMix
 
 ![](assets/images/ccmixter-browser.png)
 
-3. `uv run dataset/download_ccmixter.py` downloads the selected uploads, saving them to `dataset/music/<upload_id>_<file_index>.mp3`. It currently only downloads the first file of the upload, if it's in MP3 format.
+3. `uv run dataset/download_ccmixter.py` downloads the selected uploads, saving them to `dataset/music/<upload_id>_<file_index>.mp3`. It currently only downloads the first file of each upload, if it's in MP3 format.
 
 ## LLMs
 
